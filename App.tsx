@@ -1,22 +1,28 @@
-import 'react-native-gesture-handler';
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { Provider } from 'react-redux';
+import { TransitionPresets } from '@react-navigation/stack';
+import { createSharedElementStackNavigator } from 'react-navigation-shared-element'; import { Provider } from 'react-redux';
 
 import store from './src/redux/strore';
 import CountryListScreen from './src/screens/CountryListScreen';
 import CountryDetailScreen from './src/screens/CountryDetailScreen';
 
-const Stack = createStackNavigator();
+const Stack = createSharedElementStackNavigator();
 
 const App = () => {
   return (
     <Provider store={store}>
       <NavigationContainer>
-        <Stack.Navigator>
-          <Stack.Screen name="CountryList" component={CountryListScreen} options={{title:'World Countries'}}/>
-          <Stack.Screen name="CountryDetail" component={CountryDetailScreen} />
+        <Stack.Navigator initialRouteName="CountryList">
+          <Stack.Screen name="CountryList" component={CountryListScreen} options={{ title: 'World contries' }} />
+          <Stack.Screen
+            name="CountryDetail"
+            component={CountryDetailScreen}
+            options={() => ({
+              headerLeftLabelVisible: false,
+              ...TransitionPresets.DefaultTransition, // Optional: Add transition preset
+            })}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </Provider>

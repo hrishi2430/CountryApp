@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { View, FlatList, TouchableOpacity, StyleSheet, Image, Text } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Modalize } from 'react-native-modalize';
+import { SharedElement } from 'react-navigation-shared-element';
 import SearchInput from '../components/SearchInput';
 import { fetchCountries, sortCountriesBy } from '../redux/reducers/countriesSlice';
 import CustomText from '../components/CustomText';
 import CustomButton from '../components/CustomButton';
 import ErrorView from '../components/ErrorView';
-
 
 const CountryListScreen = ({ navigation }) => {
   const dispatch = useDispatch();
@@ -15,19 +15,17 @@ const CountryListScreen = ({ navigation }) => {
   const [search, setSearch] = useState('');
 
   const modalizeRef = useRef(null);
-  const sortingOptions = ["Name Ascending", "Name Descending", "Population Ascending", "Population Descending"]
+  const sortingOptions = ["Name Ascending", "Name Descending", "Population Ascending", "Population Descending"];
 
   useEffect(() => {
     dispatch(fetchCountries());
   }, [dispatch]);
-
 
   const filteredCountries = useMemo(() => {
     return countries.filter((country) =>
       country?.name?.common?.toLowerCase()?.includes?.(search?.toLowerCase())
     );
   }, [countries, search]);
-
 
   const handleSortChange = useCallback((sortOption) => {
     if (sortOption) {
@@ -36,34 +34,32 @@ const CountryListScreen = ({ navigation }) => {
     }
   }, [dispatch]);
 
-
-  const renderItem = ({ item }) => {
-    // let currencyKey = item?.currencies && Object.keys?.(item?.currencies)?.[0]
-    // let currencySymbol = currencyKey && item?.currencies?.[currencyKey]?.symbol
-    // {currencyKey && <CustomText type={'subTitle'}>Cur: {`${currencyKey}(${currencySymbol})`}</CustomText>}
+  const renderItem = useCallback(({ item }) => {
     return (
       <TouchableOpacity
         style={styles.item}
         onPress={() => navigation.navigate('CountryDetail', { country: item })}
       >
-        {item.flags && item.flags.svg && (
+        <SharedElement id={`item.${item.cca3}.flag`}>
           <View style={styles.shadow}>
-            <Image source={{ uri: item.flags.png }} style={styles.flag} />
+            {item.flags && item.flags.png && (
+              <Image source={{ uri: item.flags.png }} style={styles.flag} />
+            )}
           </View>
-        )}
+        </SharedElement>
         <View style={styles.info}>
-          <CustomText type={'title'} style>{item.name.common}</CustomText>
+          <CustomText type={'title'}>{item.name.common}</CustomText>
           <CustomText type={'subTitle'} style={{ marginVertical: 4 }}>Capital: {item.capital}</CustomText>
           <CustomText type={'subTitle'}>Population: {item.population}</CustomText>
         </View>
       </TouchableOpacity>
-    )
-  };
+    );
+  }, []);
+
   const onSortOptionPress = (item) => {
     handleSortChange(item);
     modalizeRef?.current?.close?.();
-  }
-
+  };
 
   const renderContent = ({ item }) => (
     <CustomButton type='transparentButton' buttonStyle={styles.bottomSheetOption} buttonContent={item} textType='defaultText' onPress={() => onSortOptionPress(item)} />
@@ -85,9 +81,10 @@ const CountryListScreen = ({ navigation }) => {
       <FlatList
         data={filteredCountries}
         keyExtractor={(item) => item.cca3}
+        stickyHeaderIndices={[0]}
         renderItem={renderItem}
         ListHeaderComponent={
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View style={styles.headerComponentStyle}>
             <SearchInput
               value={search}
               style={{ flex: 0.95 }}
@@ -108,9 +105,9 @@ const CountryListScreen = ({ navigation }) => {
           ListHeaderComponentStyle: styles.headerStyle,
         }}
         ref={modalizeRef}
-        snapPoint={250} />
-
-    </View >
+        snapPoint={250}
+      />
+    </View>
   );
 };
 
@@ -130,10 +127,13 @@ const styles = StyleSheet.create({
   flag: {
     width: 60,
     height: 50,
-    marginRight: 16,
     borderRadius: 6,
+    resizeMode:'stretch',
+    overflow: 'hidden',
   },
   shadow: {
+    backgroundColor: '#fff',
+    borderRadius: 6,
     shadowColor: '#000',
     shadowOffset: {
       width: 2,
@@ -142,6 +142,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 2,
     elevation: 5,
+    marginRight: 16,
   },
   info: {
     flex: 1,
@@ -165,7 +166,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 0
   },
   globeStyle: { borderRadius: 6, height: 160, width: 200 },
-  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' }
+  loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  headerComponentStyle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
 });
 
 export default CountryListScreen;
