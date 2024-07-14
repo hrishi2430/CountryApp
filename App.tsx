@@ -20,6 +20,8 @@ const App = () => {
             component={CountryDetailScreen}
             options={() => ({
               headerLeftLabelVisible: false,
+              headerShadowVisible: false,
+              headerTitleStyle: { fontSize: 20 },
               ...TransitionPresets.DefaultTransition, // Optional: Add transition preset
             })}
           />

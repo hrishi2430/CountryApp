@@ -45,4 +45,4 @@ const styles = StyleSheet.create({
     buttonContainer: { padding: 16 },
 });
 
-export default ErrorView;
+export default React.memo(ErrorView);

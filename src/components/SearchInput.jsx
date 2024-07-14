@@ -9,6 +9,7 @@ const SearchInput = ({ value, onChangeText, placeholder, style }) => {
       onChangeText={onChangeText}
       placeholder={placeholder}
       placeholderTextColor={'#4A789C'}
+      clearButtonMode='always'
     />
   );
 };
@@ -29,4 +30,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SearchInput;
+export default React.memo(SearchInput);

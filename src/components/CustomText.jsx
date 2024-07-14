@@ -9,16 +9,19 @@ const CustomText = ({ style, type, ...props }) => {
 const styles = StyleSheet.create({
   defaultText: {
     fontSize: 16,
+    lineHeight: 20,
     color: '#000000',
     fontFamily: 'PublicSans-Regular',
   },
   heading: {
     fontSize: 24,
+    lineHeight: 30,
     fontWeight: 'bold',
     textAlign: 'center',
   },
   subHeading: {
     fontSize: 18,
+    lineHeight: 26,
     textAlign: 'center',
   },
   body: {
@@ -26,10 +29,16 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 16,
+    lineHeight: 22,
     fontFamily: 'PublicSans-Medium',
+  },
+  boldTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   subTitle: {
     fontSize: 14,
+    lineHeight: 20,
     color: '#4A789C',
   },
   buttonText: {
@@ -37,4 +46,4 @@ const styles = StyleSheet.create({
   }
 });
 
-export default CustomText;
+export default React.memo(CustomText);

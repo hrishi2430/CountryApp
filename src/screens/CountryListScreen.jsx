@@ -13,8 +13,12 @@ const CountryListScreen = ({ navigation }) => {
   const dispatch = useDispatch();
   const { countries, loading, error } = useSelector((state) => state.countries);
   const [search, setSearch] = useState('');
+  const [showScrollTopButton, setShowScrollTopButton] = useState(false);
+
 
   const modalizeRef = useRef(null);
+  const flatListRef = useRef(null);
+
   const sortingOptions = ["Name Ascending", "Name Descending", "Population Ascending", "Population Descending"];
 
   useEffect(() => {
@@ -22,7 +26,7 @@ const CountryListScreen = ({ navigation }) => {
   }, [dispatch]);
 
   const filteredCountries = useMemo(() => {
-    return countries.filter((country) =>
+    return Object.values(countries)?.filter?.((country) =>
       country?.name?.common?.toLowerCase()?.includes?.(search?.toLowerCase())
     );
   }, [countries, search]);
@@ -34,27 +38,12 @@ const CountryListScreen = ({ navigation }) => {
     }
   }, [dispatch]);
 
-  const renderItem = useCallback(({ item }) => {
-    return (
-      <TouchableOpacity
-        style={styles.item}
-        onPress={() => navigation.navigate('CountryDetail', { country: item })}
-      >
-        <SharedElement id={`item.${item.cca3}.flag`}>
-          <View style={styles.shadow}>
-            {item.flags && item.flags.png && (
-              <Image source={{ uri: item.flags.png }} style={styles.flag} />
-            )}
-          </View>
-        </SharedElement>
-        <View style={styles.info}>
-          <CustomText type={'title'}>{item.name.common}</CustomText>
-          <CustomText type={'subTitle'} style={{ marginVertical: 4 }}>Capital: {item.capital}</CustomText>
-          <CustomText type={'subTitle'}>Population: {item.population}</CustomText>
-        </View>
-      </TouchableOpacity>
-    );
-  }, []);
+  const renderItem = useCallback(({ item }) => (
+    <CountryListItem
+      item={item}
+      onPress={() => navigation.navigate('CountryDetail', { country: item })}
+    />
+  ), [navigation]);
 
   const onSortOptionPress = (item) => {
     handleSortChange(item);
@@ -64,6 +53,10 @@ const CountryListScreen = ({ navigation }) => {
   const renderContent = ({ item }) => (
     <CustomButton type='transparentButton' buttonStyle={styles.bottomSheetOption} buttonContent={item} textType='defaultText' onPress={() => onSortOptionPress(item)} />
   );
+  const handleScroll = (event) => {
+    const offsetY = event.nativeEvent.contentOffset.y;
+    setShowScrollTopButton(offsetY > 200);
+  };
 
   if (loading) {
     return (
@@ -79,15 +72,19 @@ const CountryListScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <FlatList
+        ref={flatListRef}
         data={filteredCountries}
         keyExtractor={(item) => item.cca3}
         stickyHeaderIndices={[0]}
         renderItem={renderItem}
+        initialNumToRender={10}
+        windowSize={5}
+        onScroll={handleScroll}
         ListHeaderComponent={
           <View style={styles.headerComponentStyle}>
             <SearchInput
               value={search}
-              style={{ flex: 0.95 }}
+              style={styles.setWidth}
               onChangeText={setSearch}
               placeholder="Search for a country..."
             />
@@ -101,15 +98,40 @@ const CountryListScreen = ({ navigation }) => {
           style: styles.bottomSheet,
           keyExtractor: (item, index) => `${item} ${index}`,
           renderItem: renderContent,
-          ListHeaderComponent: <Text style={styles.bottomSheetTitle}>Sort by</Text>,
+          ListHeaderComponent: <CustomText type={'boldTitle'} style={styles.bottomSheetTitle}>Sort by</CustomText>,
           ListHeaderComponentStyle: styles.headerStyle,
         }}
         ref={modalizeRef}
         snapPoint={250}
       />
+      {showScrollTopButton && (
+        <CustomButton buttonStyle={styles.scrollTopButton} onPress={() => flatListRef.current.scrollToOffset({ offset: 0, animated: true })} buttonContent={'Scroll to Top'} />
+      )}
     </View>
   );
 };
+
+const CountryListItem = React.memo(({ item, onPress }) => {
+  return (
+    <TouchableOpacity
+      style={styles.item}
+      onPress={onPress}
+    >
+      <SharedElement id={`item.${item.cca3}.flag`}>
+        <View style={styles.shadow}>
+          {item.flags && item.flags.png && (
+            <Image source={{ uri: item.flags.png }} style={styles.flag} />
+          )}
+        </View>
+      </SharedElement>
+      <View style={styles.info}>
+        <CustomText type={'title'}>{item.name.common}</CustomText>
+        <CustomText type={'subTitle'} style={styles.setMargin}>Capital: {item.capital ?? 'N/A'}</CustomText>
+        <CustomText type={'subTitle'}>Population: {item.population}</CustomText>
+      </View>
+    </TouchableOpacity>
+  );
+});
 
 const styles = StyleSheet.create({
   container: {
@@ -128,13 +150,13 @@ const styles = StyleSheet.create({
     width: 60,
     height: 50,
     borderRadius: 6,
-    resizeMode:'stretch',
+    resizeMode: 'stretch',
     overflow: 'hidden',
   },
   shadow: {
     backgroundColor: '#fff',
     borderRadius: 6,
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOffset: {
       width: 2,
       height: 2,
@@ -153,8 +175,6 @@ const styles = StyleSheet.create({
     height: 250,
   },
   bottomSheetTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
     marginBottom: 10,
   },
   headerStyle: {
@@ -168,6 +188,19 @@ const styles = StyleSheet.create({
   globeStyle: { borderRadius: 6, height: 160, width: 200 },
   loaderContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerComponentStyle: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  scrollTopButton: {
+    position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#3f3f3f78',
+    padding: 10,
+    borderRadius: 50,
+  },
+  scrollTopButtonText: {
+    color: '#fff',
+  },
+  setMargin: { marginVertical: 4 },
+  setWidth: { flex: 0.95 },
 });
 
 export default CountryListScreen;
